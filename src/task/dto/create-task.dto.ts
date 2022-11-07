@@ -6,4 +6,10 @@ export class CreateTaskDto {
 
   @ApiProperty()
   description: string;
+
+  @ApiProperty()
+  subTasks?: CreateTaskDto[];
+
+  @ApiProperty()
+  assigneeIds: string[];
 }

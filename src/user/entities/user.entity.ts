@@ -1,3 +1,4 @@
+import { Project } from './../../project/entities/project.entity';
 import {
   BeforeInsert,
   Column,
@@ -11,35 +12,51 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { Workspace } from 'src/workspace/entities/workspace.entity';
+import { Task } from './../../task/entities/task.entity';
+import { Field, ObjectType } from '@nestjs/graphql';
 
+@ObjectType()
 @Entity({ name: 'users' })
 export class User {
+  @Field()
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty()
   id: string;
 
+  @Field()
   @Column({ nullable: false, unique: true })
   @Index({ unique: true })
   @ApiProperty()
   email: string;
 
-  @Column({ nullable: false, select: false })
+  @Column({ nullable: false })
   @ApiHideProperty()
   @Exclude()
   password: string;
 
+  @Field()
   @Column({ nullable: false, unique: true })
   @ApiProperty()
   username: string;
 
+  @Field()
   @Column({ nullable: true, default: false })
   @ApiProperty()
   verified: boolean;
 
+  @Field((type) => [Workspace], { nullable: true })
   @OneToMany(() => Workspace, (workspace) => workspace.user, {
     cascade: true,
   })
   workspaces: Workspace[];
+
+  @OneToMany(() => Project, (project) => project.owner, {
+    cascade: true,
+  })
+  projects: Project[];
+
+  @OneToMany(() => Task, (task) => task.creator)
+  tasks: Task[];
 
   @BeforeInsert()
   async setPassword(password: string): Promise<void> {

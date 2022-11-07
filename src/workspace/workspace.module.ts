@@ -1,19 +1,15 @@
-import { MongooseModule } from '@nestjs/mongoose';
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { WorkspaceController } from './workspace.controller';
-import { WorkspaceSchema } from './schemas/workspace.schema';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Workspace } from './entities/workspace.entity';
+import { Workspace, Tag } from './entities';
+import { WorkspaceResolver } from './resovler/workspace.resolver';
 
+@Global()
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Workspace]),
-    MongooseModule.forFeature([
-      { name: Workspace.name, schema: WorkspaceSchema },
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Workspace, Tag])],
   controllers: [WorkspaceController],
-  providers: [WorkspaceService],
+  providers: [WorkspaceService, WorkspaceResolver],
+  exports: [WorkspaceService],
 })
 export class WorkspaceModule {}

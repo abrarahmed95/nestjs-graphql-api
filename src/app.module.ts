@@ -1,4 +1,9 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import {
+  CacheInterceptor,
+  CacheModule,
+  ClassSerializerInterceptor,
+  Module,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
@@ -8,22 +13,23 @@ import { TerminusModule } from '@nestjs/terminus';
 import { HttpModule } from '@nestjs/axios';
 import { TaskModule } from './task/task.module';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RedisModule } from 'nestjs-redis';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { BullModule } from '@nestjs/bull';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CommonModule } from './common/common.module';
+import { TeamModule } from './team/team.module';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-    }),
     TypeOrmModule.forRoot({
-      host: process.env.DB_HOST,
+      host: process.env.POSTGRES_DB_HOST,
       type: 'postgres',
       port: 5432,
       username: process.env.POSTGRES_USER,
@@ -31,11 +37,30 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       database: process.env.POSTGRES_DB,
       autoLoadEntities: true,
       synchronize: true,
+      logging: false,
+      cache: {
+        type: 'ioredis',
+        options: {
+          host: 'redis',
+          port: 6379,
+        },
+        ignoreErrors: true,
+      },
     }),
-    // RedisModule.register({
-    //   host: 'redis',
-    //   port: 6379,
-    // }),
+    BullModule.forRoot({
+      redis: {
+        host: 'redis',
+        port: 6379,
+      },
+    }),
+    CacheModule.register({
+      ttl: 5,
+      max: 10,
+      isGlobal: true,
+      store: redisStore,
+      host: 'redis',
+      port: 6379,
+    }),
     MailerModule.forRoot({
       transport: {
         host: 'in-v3.mailjet.com',
@@ -49,6 +74,23 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
         from: '"No Reply" <noreply@example.com>',
       },
     }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true,
+      subscriptions: {
+        'graphql-ws': true,
+      },
+      // transformSchema: (schema) => upperDirectiveTransformer(schema, 'upper'),
+      // installSubscriptionHandlers: true,
+      // buildSchemaOptions: {
+      //   directives: [
+      //     new GraphQLDirective({
+      //       name: 'upper',
+      //       locations: [DirectiveLocation.FIELD_DEFINITION],
+      //     }),
+      //   ],
+      // },
+    }),
     AuthModule,
     UserModule,
     WorkspaceModule,
@@ -56,6 +98,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     TerminusModule,
     HttpModule,
     TaskModule,
+    CommonModule,
+    TeamModule,
   ],
   controllers: [AppController],
   providers: [
@@ -63,6 +107,10 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
   ],
 })
 export class AppModule {}

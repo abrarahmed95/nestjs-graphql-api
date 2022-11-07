@@ -2,13 +2,14 @@ version: '3.9'
 
 services:
   web: 
-    container_name: web
+    container_name: intrack-server
     build: 
       context: .
       target: development
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
+      - /usr/src/app/node_modules/bcrypt/
+      # - /usr/src/app/node_modules
     ports:
       - 3000:3000
     command: npm run start:dev
@@ -23,38 +24,33 @@ services:
   redis:
     container_name: redis
     image: redis:7
+    volumes:
+      - redis:/data
+    ports:
+      - 6379:6379  
     networks:
       - webnet
+
   postgres:
     container_name: postgres
     image: postgres:12
     networks:
       - webnet
     environment:
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_USER: admin
-      POSTGRES_DB: intrackdb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
       PG_DATA: /var/lib/postgresql/data
     ports:
       - 5432:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
   
-  postgres_admin:
-    image: dpage/pgadmin4:6.14
-    depends_on:
-      - postgres
-    networks:
-      - webnet
-    environment: 
-      PGADMIN_DEFAULT_EMAIL: admin@intrack.app
-      PGADMIN_DEFAULT_PASSWORD: 123456
-    ports:
-      - 5050:80
-    volumes:
-      - ./data/pgadmin:/var/lib/pgadmin
-
 networks:
   webnet:
+    driver: bridge
+    
 volumes:
+  redis:
+    driver: local
   pgdata:

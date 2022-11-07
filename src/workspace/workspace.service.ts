@@ -1,21 +1,21 @@
 import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { WorkspaceDocument } from './schemas/workspace.schema';
-import { Model } from 'mongoose';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
 import { Workspace } from './entities/workspace.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Tag } from './entities';
+import { CreateTagDto } from './dto/create-tag.dto';
 
 @Injectable()
 export class WorkspaceService {
   constructor(
     @InjectRepository(Workspace)
     private workspaceRepository: Repository<Workspace>,
+    @InjectRepository(Tag)
+    private tagRepository: Repository<Tag>,
     private userService: UserService,
     private configService: ConfigService,
   ) {}
@@ -29,23 +29,63 @@ export class WorkspaceService {
     return await this.workspaceRepository.save(workspace);
   }
 
-  findAll(options?: FindOptionsWhere<Workspace>) {
-    return this.workspaceRepository.findBy(options);
+  async find(options?: FindManyOptions<Workspace>) {
+    return this.workspaceRepository.find(options);
   }
 
-  findWorkspacesByUserId(userId: string) {
-    return this.findAll({ id: userId });
+  async findByUserId(id: string): Promise<Workspace[]> {
+    return this.find({ where: { user: { id } }, relations: { tags: true } });
   }
 
-  findOne(id: string) {
-    return;
+  async findOne(id: string): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id },
+      relations: { tags: true },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException();
+    }
+
+    return workspace;
   }
 
-  update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    return `This action updates a #${id} workspace`;
+  async update(id: string, updateWorkspaceDto: UpdateWorkspaceDto) {
+    const result = await this.workspaceRepository.update(
+      { id },
+      updateWorkspaceDto,
+    );
+
+    if (!result.affected) {
+      throw new NotFoundException();
+    }
+
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} workspace`;
+  async remove(id: string): Promise<boolean> {
+    const result = await this.workspaceRepository.delete({ id });
+
+    if (!result.affected) {
+      throw new NotFoundException();
+    }
+
+    return !!result.affected;
+  }
+
+  async getAllTags(workspaceId: string): Promise<Tag[]> {
+    return this.tagRepository.find({
+      where: {
+        workspaceId,
+      },
+    });
+  }
+
+  async createTag(workspaceId: string, createTagDto: CreateTagDto) {
+    const workspace = await this.findOne(workspaceId);
+    const tag = this.tagRepository.create(createTagDto);
+    tag.workspace = workspace;
+
+    return this.tagRepository.save(tag);
   }
 }

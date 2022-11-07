@@ -2,6 +2,10 @@ import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import * as compression from 'compression';
+import * as session from 'express-session';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import * as morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +15,19 @@ async function bootstrap() {
   //     { path: 'api-docs', method: RequestMethod.GET },
   //   ],
   // });
+  app.enableCors();
+  app.use(compression());
+  app.use(
+    session({
+      secret: 'my-secret',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
+
+  // app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
+  app.use(morgan('combined'));
 
   app.useGlobalPipes(new ValidationPipe());
 
