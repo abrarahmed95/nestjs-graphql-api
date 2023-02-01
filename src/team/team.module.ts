@@ -10,6 +10,6 @@ import { TeamResolver } from './resolver/team.resolver';
   imports: [TypeOrmModule.forFeature([Team])],
   providers: [TeamService, TeamResolver],
   controllers: [TeamController],
-  exports: [TeamService],
+  exports: [TeamService, TypeOrmModule],
 })
 export class TeamModule {}

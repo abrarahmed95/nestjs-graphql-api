@@ -1,3 +1,4 @@
+import { TeamService } from './../../team/team.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -13,11 +14,22 @@ export class TaskService {
     @InjectRepository(Task) private taskRepository: Repository<Task>,
     private dataSource: DataSource,
     private userService: UserService,
+    private teamService: TeamService,
   ) {}
 
   async create(user: User, createTaskDto: CreateTaskDto): Promise<Task> {
     const task = this.taskRepository.create(createTaskDto);
     task.creator = user;
+
+    if (createTaskDto?.teamId) {
+      const [team, allTeamTasks] = await Promise.all([
+        this.teamService.findOne(createTaskDto.teamId),
+        this.findByTeamId(createTaskDto.teamId),
+      ]);
+
+      task.team = team;
+      task.taskId = allTeamTasks.length + 1;
+    }
 
     if (createTaskDto?.assigneeIds?.length !== 0) {
       const assignee = await this.userService.getUsersById(
@@ -26,17 +38,19 @@ export class TaskService {
       task.assignee = assignee;
     }
 
-    if (createTaskDto?.subTasks && createTaskDto?.subTasks?.length !== 0) {
-      createTaskDto.subTasks.forEach((subTaskDto) => {
-        const subTask = this.taskRepository.create(subTaskDto);
-        subTask.parent = task;
-        subTask.creator = user;
+    // if (createTaskDto?.subTasks && createTaskDto?.subTasks?.length !== 0) {
+    //   createTaskDto.subTasks.forEach((subTaskDto) => {
+    //     const subTask = this.taskRepository.create(subTaskDto);
+    //     subTask.parent = task;
+    //     subTask.creator = user;
 
-        task.subTasks.push(subTask);
-      });
-    }
+    //     task.subTasks.push(subTask);
+    //   });
+    // }
 
-    return this.taskRepository.save(task);
+    const t = await this.taskRepository.save(task);
+    console.log(t);
+    return t;
   }
 
   find(options?: FindManyOptions<Task>): Promise<Task[]> {
@@ -57,6 +71,23 @@ export class TaskService {
     return this.find({
       where: {
         workspace: { id },
+      },
+    });
+  }
+
+  async findByTeamId(teamId: string): Promise<Task[]> {
+    const team = await this.teamService.findOne(teamId);
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    return this.find({
+      where: {
+        teamId: team?.id,
+      },
+      relations: {
+        creator: true,
       },
     });
   }

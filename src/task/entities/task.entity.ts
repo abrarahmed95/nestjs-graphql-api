@@ -17,13 +17,27 @@ import { Exclude } from 'class-transformer';
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 export enum Priority {
+  NO_PRIORITY,
   LOW,
   MEDIUM,
   HIGH,
+  URGENT,
+}
+
+export enum Status {
+  BACKLOG,
+  TODO,
+  IN_PROGRESS,
+  DONE,
+  CANCELED,
 }
 
 registerEnumType(Priority, {
   name: 'Priority',
+});
+
+registerEnumType(Status, {
+  name: 'Status',
 });
 
 @ObjectType()
@@ -33,6 +47,11 @@ export class Task {
   @Field()
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ApiProperty()
+  @Field()
+  @Column({ nullable: false })
+  taskId: number;
 
   @ApiProperty()
   @Field()
@@ -57,7 +76,7 @@ export class Task {
   @Column({ nullable: true })
   creatorId?: string;
 
-  @Exclude()
+  @Field((type) => User, { nullable: true })
   @ManyToOne(() => User, (user) => user.tasks, {
     onDelete: 'SET NULL',
   })
@@ -75,7 +94,7 @@ export class Task {
   @ManyToOne((type) => Team, (team) => team.tasks, {
     onDelete: 'SET NULL',
   })
-  team: Team[];
+  team: Team;
 
   @ApiProperty()
   @Field()
@@ -104,25 +123,32 @@ export class Task {
   assignee: User[];
 
   @ApiProperty()
-  @Field()
+  @Field(() => Number)
   @CreateDateColumn()
-  createdAt: string;
+  createdAt: number;
 
   @ApiProperty()
-  @Field()
+  @Field(() => Number)
   @UpdateDateColumn()
-  updatedAt: string;
+  updatedAt: number;
 
   @ApiProperty()
-  @Field((type) => Priority, {
-    defaultValue: Priority.LOW,
-  })
+  @Field((type) => Priority)
   @Column({
     type: 'enum',
     enum: Priority,
-    default: Priority.LOW,
+    default: Priority.NO_PRIORITY,
   })
   priority: Priority;
+
+  @ApiProperty()
+  @Field((type) => Status)
+  @Column({
+    type: 'enum',
+    enum: Status,
+    default: Status.BACKLOG,
+  })
+  status: Status;
 
   @ApiProperty()
   @Field()

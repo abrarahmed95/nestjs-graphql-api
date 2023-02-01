@@ -1,6 +1,13 @@
+import { TeamService } from './../team/team.service';
 import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,16 +24,33 @@ export class WorkspaceService {
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
     private userService: UserService,
+    @Inject(forwardRef(() => TeamService))
+    private teamService: TeamService,
     private configService: ConfigService,
   ) {}
 
-  async create(userId: string, createWorkspaceDto: CreateWorkspaceDto) {
+  async create(
+    userId: string,
+    createWorkspaceDto: CreateWorkspaceDto,
+  ): Promise<Workspace> {
     const user = await this.userService.findOne(userId);
 
-    const workspace = this.workspaceRepository.create(createWorkspaceDto);
-    workspace.user = user;
+    const data = this.workspaceRepository.create(createWorkspaceDto);
 
-    return await this.workspaceRepository.save(workspace);
+    data.user = user;
+
+    try {
+      const workspace = await this.workspaceRepository.save(data);
+
+      await this.teamService.create({
+        name: workspace.name,
+        workspaceId: workspace.id,
+      });
+
+      return workspace;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
   async find(options?: FindManyOptions<Workspace>) {
@@ -35,6 +59,19 @@ export class WorkspaceService {
 
   async findByUserId(id: string): Promise<Workspace[]> {
     return this.find({ where: { user: { id } }, relations: { tags: true } });
+  }
+
+  async findBySlug(slug: string): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.findOne({
+      where: { slug },
+      relations: { teams: true },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException();
+    }
+
+    return workspace;
   }
 
   async findOne(id: string): Promise<Workspace> {

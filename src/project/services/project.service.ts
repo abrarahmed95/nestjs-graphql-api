@@ -1,3 +1,4 @@
+import { TeamService } from './../../team/team.service';
 import {
   Injectable,
   InternalServerErrorException,
@@ -16,6 +17,7 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project) private projectRepository: Repository<Project>,
     private workspaceService: WorkspaceService,
+    private teamService: TeamService,
   ) {}
 
   async create(
@@ -32,6 +34,12 @@ export class ProjectService {
       owner: user,
     });
 
+    if (createProjectDto?.teamIds && Array.isArray(createProjectDto?.teamIds)) {
+      const teams = await this.teamService.findByIds(createProjectDto.teamIds);
+      project.teams = teams;
+    }
+
+    // return {} as any;
     return this.projectRepository.save(project);
   }
 

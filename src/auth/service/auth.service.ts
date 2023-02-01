@@ -22,8 +22,8 @@ export class AuthService {
     const accessToken = await this.createAccessToken(user);
 
     return {
-      email: user.email,
       accessToken,
+      user,
     };
   }
 

@@ -15,6 +15,7 @@ async function bootstrap() {
   //     { path: 'api-docs', method: RequestMethod.GET },
   //   ],
   // });
+
   app.enableCors();
   app.use(compression());
   app.use(

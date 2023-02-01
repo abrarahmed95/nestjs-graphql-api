@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from 'src/user/entities/user.entity';
 
 export class UserLoginResponse {
   @ApiProperty()
-  email: string;
+  accessToken: string;
 
   @ApiProperty()
-  accessToken: string;
+  user: User;
 }

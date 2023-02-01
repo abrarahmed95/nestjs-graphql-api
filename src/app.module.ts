@@ -21,6 +21,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { CommonModule } from './common/common.module';
 import { TeamModule } from './team/team.module';
+import { ViewModule } from './view/view.module';
 import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
@@ -29,15 +30,11 @@ import * as redisStore from 'cache-manager-redis-store';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      host: process.env.POSTGRES_DB_HOST,
+      url: process.env.DB_URI,
       type: 'postgres',
-      port: 5432,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
       autoLoadEntities: true,
       synchronize: true,
-      logging: false,
+      logging: true,
       cache: {
         type: 'ioredis',
         options: {
@@ -53,14 +50,14 @@ import * as redisStore from 'cache-manager-redis-store';
         port: 6379,
       },
     }),
-    CacheModule.register({
-      ttl: 5,
-      max: 10,
-      isGlobal: true,
-      store: redisStore,
-      host: 'redis',
-      port: 6379,
-    }),
+    // CacheModule.register({
+    //   ttl: 5,
+    //   max: 10,
+    //   isGlobal: true,
+    //   store: redisStore,
+    //   host: 'redis',
+    //   port: 6379,
+    // }),
     MailerModule.forRoot({
       transport: {
         host: 'in-v3.mailjet.com',
@@ -100,6 +97,7 @@ import * as redisStore from 'cache-manager-redis-store';
     TaskModule,
     CommonModule,
     TeamModule,
+    ViewModule,
   ],
   controllers: [AppController],
   providers: [

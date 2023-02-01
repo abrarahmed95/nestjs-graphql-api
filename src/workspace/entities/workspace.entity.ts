@@ -9,6 +9,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinTable,
   ManyToMany,
   ManyToOne,
@@ -22,19 +23,20 @@ import { Field, ObjectType } from '@nestjs/graphql';
 
 @Entity('workspaces')
 @ObjectType()
+@Index(['slug'])
 export class Workspace {
   @ApiProperty()
-  @Field((type) => String)
+  @Field()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @ApiProperty()
-  @Field((type) => String)
+  @Field()
   @Column({ nullable: false, unique: true })
   name: string;
 
   @ApiProperty()
-  @Field((type) => String)
+  @Field()
   @Column({ nullable: true, unique: true })
   slug: string;
 
@@ -56,30 +58,31 @@ export class Workspace {
     cascade: true,
     onDelete: 'CASCADE',
   })
-  @Field(() => [Tag], { nullable: true })
+  @Field((type) => [Tag], { nullable: true })
   tags: Tag[];
 
   @OneToMany(() => Team, (team) => team.workspace, {
     cascade: true,
     onDelete: 'CASCADE',
   })
-  @Field(() => [Team], { nullable: true, defaultValue: [] })
+  @Field((type) => [Team], { nullable: true, defaultValue: [] })
   teams: Team[];
 
   @ApiProperty()
   @IsDate()
   @CreateDateColumn()
+  @Field()
   createdAt: Date;
 
   @ApiProperty()
   @IsDate()
   @UpdateDateColumn()
+  @Field()
   updatedAt: Date;
 
   @BeforeInsert()
   @BeforeUpdate()
   createSlug() {
-    console.log('before update');
-    this.slug = this.name.split(' ')[0].slice(0, 3).toUpperCase();
+    // this.slug = this.name.split(' ')[0].slice(0, 3).toUpperCase();
   }
 }

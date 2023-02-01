@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from './entities/team.entity';
@@ -31,6 +31,12 @@ export class TeamService {
   findTeamsByWorkspaceId(workspaceId: string) {
     return this.teamRepository.findBy({
       workspaceId,
+    });
+  }
+
+  async findByIds(ids: string[]): Promise<Team[]> {
+    return this.teamRepository.find({
+      where: { id: In(ids) },
     });
   }
 

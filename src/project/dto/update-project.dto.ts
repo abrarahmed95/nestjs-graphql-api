@@ -1,6 +1,7 @@
-import { OmitType } from '@nestjs/mapped-types';
-import { CreateProjectDto } from './create-project.dto';
+import { Field, InputType } from '@nestjs/graphql';
 
-export class UpdateProjectDto extends OmitType(CreateProjectDto, [
-  'workspaceId',
-] as const) {}
+@InputType()
+export class UpdateProjectDto {
+  @Field(() => String)
+  name: string;
+}
