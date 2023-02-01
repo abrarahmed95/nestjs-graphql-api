@@ -31,4 +31,4 @@ COPY . .
 
 RUN npm run build 
 
-CMD ["npm", "run", "start:prod"]
+ENTRYPOINT ["npm", "run", "start:prod"]
