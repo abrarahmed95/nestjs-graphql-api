@@ -35,14 +35,14 @@ import * as redisStore from 'cache-manager-redis-store';
       autoLoadEntities: true,
       synchronize: true,
       logging: true,
-      cache: {
-        type: 'ioredis',
-        options: {
-          host: 'redis',
-          port: 6379,
-        },
-        ignoreErrors: true,
-      },
+      // cache: {
+      //   type: 'ioredis',
+      //   options: {
+      //     host: 'redis',
+      //     port: 6379,
+      //   },
+      //   ignoreErrors: true,
+      // },
     }),
     BullModule.forRoot({
       redis: {

@@ -5,20 +5,17 @@ services:
     container_name: intrack-server
     build: 
       context: .
-      target: development
+      target: production
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules/bcrypt/
-      # - /usr/src/app/node_modules
     ports:
       - 3000:3000
-    command: npm run start:dev
+    command: npm run start:prod
     env_file:
       - .env
     networks:
       - webnet
     depends_on:
-      # - postgres
       - redis
     
   redis:
@@ -30,21 +27,6 @@ services:
       - 6379:6379  
     networks:
       - webnet
-
-  # postgres:
-  #   container_name: postgres
-  #   image: postgres:12
-  #   networks:
-  #     - webnet
-  #   environment:
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     PG_DATA: /var/lib/postgresql/data
-  #   ports:
-  #     - 5432:5432
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
   
 networks:
   webnet:
