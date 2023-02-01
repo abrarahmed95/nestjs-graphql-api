@@ -4,7 +4,7 @@
 
 ## Description
 
-[Intrack](https://intrack.app) Intrack designed to help teams effectively plan, organize, and execute projects.
+[Intrack](https://intrack.app)
 
 ## Installation
 
