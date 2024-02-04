@@ -4,17 +4,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as compression from 'compression';
 import * as session from 'express-session';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // app.setGlobalPrefix('api/v1', {
-  //   exclude: [
-  //     { path: 'status', method: RequestMethod.GET },
-  //     { path: 'api-docs', method: RequestMethod.GET },
-  //   ],
-  // });
+  app.setGlobalPrefix('api/v1', {
+    exclude: [
+      { path: 'status', method: RequestMethod.GET },
+      { path: 'api-docs', method: RequestMethod.GET },
+    ],
+  });
 
   app.enableCors();
   app.use(compression());
@@ -26,8 +25,6 @@ async function bootstrap() {
     }),
   );
 
-  // app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-
   app.use(morgan('combined'));
 
   app.useGlobalPipes(new ValidationPipe());
@@ -36,7 +33,6 @@ async function bootstrap() {
     .setTitle('Intrack API')
     .setDescription('The Intrack API description')
     .setVersion('1.0')
-    // .addTag('cats')
     .addBearerAuth()
     .build();
 

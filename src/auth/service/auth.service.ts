@@ -23,7 +23,6 @@ export class AuthService {
 
     return {
       accessToken,
-      user,
     };
   }
 

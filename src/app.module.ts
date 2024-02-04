@@ -14,14 +14,12 @@ import { HttpModule } from '@nestjs/axios';
 import { TaskModule } from './task/task.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { BullModule } from '@nestjs/bull';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { CommonModule } from './common/common.module';
 import { TeamModule } from './team/team.module';
-import { ViewModule } from './view/view.module';
 import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
@@ -30,46 +28,29 @@ import * as redisStore from 'cache-manager-redis-store';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      url: process.env.DB_URI,
       type: 'postgres',
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
       autoLoadEntities: true,
       synchronize: true,
-      logging: true,
-      // cache: {
-      //   type: 'ioredis',
-      //   options: {
-      //     host: 'redis',
-      //     port: 6379,
-      //   },
-      //   ignoreErrors: true,
-      // },
+      logging: false,
     }),
     BullModule.forRoot({
       redis: {
-        host: 'redis',
+        host: process.env.REDIS_HOST || 'localhost',
         port: 6379,
       },
     }),
-    // CacheModule.register({
-    //   ttl: 5,
-    //   max: 10,
-    //   isGlobal: true,
-    //   store: redisStore,
-    //   host: 'redis',
-    //   port: 6379,
-    // }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'in-v3.mailjet.com',
-        secure: false,
-        auth: {
-          user: '3d7d5e5a0c5c0a8749358020a4137fa5',
-          pass: '8237bd9214d6d6b68b8547c6bd74a397',
-        },
-      },
-      defaults: {
-        from: '"No Reply" <noreply@example.com>',
-      },
+    CacheModule.register({
+      ttl: 5,
+      max: 10,
+      isGlobal: true,
+      store: redisStore,
+      host: process.env.REDIS_HOST || 'localhost',
+      port: 6379,
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -97,7 +78,6 @@ import * as redisStore from 'cache-manager-redis-store';
     TaskModule,
     CommonModule,
     TeamModule,
-    ViewModule,
   ],
   controllers: [AppController],
   providers: [
@@ -105,10 +85,6 @@ import * as redisStore from 'cache-manager-redis-store';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: CacheInterceptor,
-    // },
   ],
 })
 export class AppModule {}

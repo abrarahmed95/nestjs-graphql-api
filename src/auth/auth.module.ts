@@ -5,6 +5,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { WsJwtStrategy } from './strategies/ws-jwt.strategy';
+import { AuthResolver } from './resolver/auth.resolver';
 
 @Global()
 @Module({
@@ -16,6 +17,6 @@ import { WsJwtStrategy } from './strategies/ws-jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, WsJwtStrategy],
+  providers: [AuthService, JwtStrategy, WsJwtStrategy, AuthResolver],
 })
 export class AuthModule {}

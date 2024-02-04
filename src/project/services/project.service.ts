@@ -39,7 +39,6 @@ export class ProjectService {
       project.teams = teams;
     }
 
-    // return {} as any;
     return this.projectRepository.save(project);
   }
 
